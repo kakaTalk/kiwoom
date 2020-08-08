@@ -19,12 +19,17 @@ class KiwoomS(QAxWidget):
     def _login(self):
         self.dynamicCall("CommConnect()")
         self.onEvent = QEventLoop()
-        self.onEvent.exec()
+        #self.onEvent.exec()
 
     # Event CallBack
     def set_signol_slot(self):
         self.OnEventConnect.connect(self._event_connect)
         self.OnReceiveTrData.connect(self._OnReceiveTrData)
+        self.OnReceiveChejanData.connect(self._OnReceiveChejanData)
+
+    def _get_connect_state(self):
+        ret = self.dynamicCall("GetConnectState()")
+        return ret;
 
     def _event_connect(self, err_code):
         if err_code == 0:
@@ -39,9 +44,19 @@ class KiwoomS(QAxWidget):
         self.onEvent = QEventLoop()
         self.onEvent.exec()
 
-    #                    종목코드 주문숫자
-    def send_order(self, code, num, account, orderType, price):
-        self._send_order("send_order_req", "0101", account, orderType, code, num,  price, "03", " ")
+    def _OnReceiveChejanData(self, gubun, iten_cnt, fid_list):
+        print(gubun)
+        print("fidList" + fid_list)
+        print(self.get_chejan_data(9203))
+        print(self.get_chejan_data(302))
+        print(self.get_chejan_data(900))
+        print(self.get_chejan_data(901))
+        self.onEvent.exit()
+
+
+    def get_chejan_data(self, fid):
+        ret = self.dynamicCall("GetChejanData(int)", fid)
+        return ret
 
     def _send_order(self, rqname, screen_no, account, order_type, code, num, price, hoga, orderNo):
         self.dynamicCall("SendOrder(QString, QString, QString, int, QString, int, int, QString, QString)",
@@ -69,7 +84,7 @@ class KiwoomS(QAxWidget):
                                                                                #사용안함
     def _OnReceiveTrData(self, scrNo, rq_name, tr_name, recode_name, prevNext,  dl, err_code, msg, msg1):
         self.nextValueHave = prevNext
-        print(self.nextValueHave)
+
         if rq_name == "opt10001_req":
             self._get__opt10001(tr_name, recode_name, prevNext)
         #일봉 조회
