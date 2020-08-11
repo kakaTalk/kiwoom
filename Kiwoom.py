@@ -10,7 +10,14 @@ class KiwoomS(QAxWidget):
 
         self._create_kiwoom_instance()
         self.set_signol_slot()
-        self.nextValueHave = 0;
+
+        self.nextValueHave = 0      #다음 값이 있는지 체크해줌
+        self.codeToName = {}
+
+        #로그인
+        self._login()
+        #종목코드 갱신
+        self.code_to_name()
 
     def _create_kiwoom_instance(self):
         self.setControl("KHOPENAPI.KHOpenAPICtrl.1")
@@ -19,7 +26,21 @@ class KiwoomS(QAxWidget):
     def _login(self):
         self.dynamicCall("CommConnect()")
         self.onEvent = QEventLoop()
-        #self.onEvent.exec()
+        self.onEvent.exec()
+
+    def _get_login_info(self, tag):
+        ret = self.dynamicCall("GetLoginInfo(Qstring)", tag)
+        return ret
+
+    #코스닥 코스피 종목코드 갱신
+    def code_to_name(self):
+        code_list = self.get_code_list_by_market(0)
+
+        for i in self.get_code_list_by_market(10):
+            code_list.append(i)
+
+        for i in code_list:
+            self.codeToName[self.get_master_code_name(i)] = i
 
     # Event CallBack
     def set_signol_slot(self):
@@ -29,7 +50,7 @@ class KiwoomS(QAxWidget):
 
     def _get_connect_state(self):
         ret = self.dynamicCall("GetConnectState()")
-        return ret;
+        return ret
 
     def _event_connect(self, err_code):
         if err_code == 0:
@@ -47,10 +68,10 @@ class KiwoomS(QAxWidget):
     def _OnReceiveChejanData(self, gubun, iten_cnt, fid_list):
         print(gubun)
         print("fidList" + fid_list)
-        print(self.get_chejan_data(9203))
-        print(self.get_chejan_data(302))
-        print(self.get_chejan_data(900))
-        print(self.get_chejan_data(901))
+
+        print(self.get_chejan_data(302))    #종목명
+        print(self.get_chejan_data(900))    #"주문수량"
+        print(self.get_chejan_data(901))    #"901" : "주문가격"
         self.onEvent.exit()
 
 
