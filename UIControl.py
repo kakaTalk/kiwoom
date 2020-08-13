@@ -1,6 +1,7 @@
 from  PyQt5.QtWidgets import  *
 from  PyQt5.QtCore import  *
 from  PyQt5 import uic
+from  PyQt5.QtGui import  *
 from  Kiwoom import KiwoomS
 from Draw import Draw
 from DbControl import DbCon
@@ -19,6 +20,7 @@ class MyWindow(QMainWindow, form_class):
         self.setupUi(self)          #formClass ui를 따오기 위해 사용
 
 
+        self.drawGraph = Draw(self.verticalLayout)
         self.controlApi = kiwoom
 
         self.show_account()
@@ -61,18 +63,30 @@ class MyWindow(QMainWindow, form_class):
     def stop_show_graph(self):
         self.userSeeChart = 0
 
+    def view_ten_hoga(self):
+        self.controlApi._set__opt10004(self.code)
+
+        model = QStandardItemModel()
+        for i in self.controlApi.hoga_list:
+            model.appendRow(QStandardItem(i))
+
+        self.hoga_list_view.setModel(model)
+
     def code_changed(self):
-        self.drawGraph = Draw()
         name = self.lineEdit.text()
         self.code = self.controlApi.codeToName[name]
 
         self.lineEdit_2.setText(self.code)
+        self.view_ten_hoga()
         self.userSeeChart = 1
 
+
+    #ohlc비교해서 호가 날리기 호가는 조작가능 현재가만 알고 있으면 그 밑에 가격 알면 
     def renew_chart(self):
         if self.userSeeChart == 1:
             self.controlApi._set_opt10081(stock_code=self.code, date=self.today, prevNext=self.controlApi.nextValueHave)
             self.drawGraph.draw_ohlc(self.controlApi.ohlc)
+
 
     def send_order(self):
         order_type_lookup = {"신규매수": 1, "신규매도": 2, "매수취소":3, "매도취소":4}
@@ -85,7 +99,7 @@ class MyWindow(QMainWindow, form_class):
         num = self.spinBox_2.value()
         price = self.spinBox.value()
 
-        self.controlApi._send_order("send_order_req", "0101", account, order_type, code, num, price, hoga_lookup[hoga], "")     #신규주문
+        self.controlApi._send_order("send_order_req", "0101", account, order_type_lookup[order_type], code, num, price, hoga_lookup[hoga], "")     #신규주문
 
 
 
