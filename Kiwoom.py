@@ -72,6 +72,7 @@ class KiwoomS(QAxWidget):
         print(self.get_chejan_data(302))    #종목명
         print(self.get_chejan_data(900))    #"주문수량"
         print(self.get_chejan_data(901))    #"901" : "주문가격"
+
         self.onEvent.exit()
 
 
@@ -123,6 +124,8 @@ class KiwoomS(QAxWidget):
             self._get_opt10080(tr_name, recode_name, prevNext)
         elif rq_name == "opt10082_req":
             self._get_opt10082(tr_name, recode_name, prevNext)
+        elif rq_name == "opt10004_req":
+            self._get_opt10004(tr_name, recode_name, prevNext)
 
         self.onEvent.exit()
 
@@ -142,6 +145,28 @@ class KiwoomS(QAxWidget):
     def _GetCommData(self, tr_name, recode_name, index, tr_get_name):
         data = self.dynamicCall("GetCommData(QString, QString, int, QString)", tr_name, recode_name, index, tr_get_name)
         return data.strip()
+
+    def _set__opt10004(self, code):
+        self._SetInputValue("종목코드", code)
+        self._CommRqData("opt10004_req", "opt10004", 0)
+
+        dataList = []                           #현재가로부터 5호가
+
+    def _get_opt10004(self, tr_name, recode_name, index):
+        self.hoga_list = []
+
+        for i in range(10):
+            self.hoga_list.append(0)
+
+        self.hoga_list[0] = self._GetCommData(tr_name, recode_name, index, "매도5차선호가") + "   " +  self._GetCommData(tr_name, recode_name, index, "매도5차선잔량")
+        self.hoga_list[1] = self._GetCommData(tr_name, recode_name, index, "매도4차선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매도4차선잔량")
+        self.hoga_list[2] = self._GetCommData(tr_name, recode_name, index, "매도3차선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매도3차선잔량")
+        self.hoga_list[3] = self._GetCommData(tr_name, recode_name, index, "매도2차선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매도2차선잔량")
+        self.hoga_list[4] = self._GetCommData(tr_name, recode_name, index, "매도최우선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매도최우선잔량")
+        self.hoga_list[5] = self._GetCommData(tr_name, recode_name, index, "매수최우선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매수최우선잔량")
+        self.hoga_list[6] = self._GetCommData(tr_name, recode_name, index, "매수2차선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매수2차선잔량")
+        self.hoga_list[7] = self._GetCommData(tr_name, recode_name, index, "매수3차선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매수3차선잔량")
+        self.hoga_list[8] = self._GetCommData(tr_name, recode_name, index, "매수4차선호가") + "   " + self._GetCommData(tr_name, recode_name, index, "매수4차선잔량")
 
 
     def _set_opt10047(self, tr_name, recode_name, index):
@@ -314,7 +339,6 @@ class KiwoomS(QAxWidget):
 
 
         self.ohlc = DataFrame(self.ohlc)
-
 
 
 
