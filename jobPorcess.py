@@ -1,37 +1,64 @@
 from queue import PriorityQueue
 from datetime import datetime
 import time
+from PyQt5.QtCore import *
 
 
-class priortyProcess:
+class priortyProcess(QThread):
     def __init__(self, callKiwoom):
+        super().__init__()
         self.job_qp = PriorityQueue()
 
         self.callApi = callKiwoom
-        self.undo_use = -1  #-1 사용 x 나머지는 최근 사용한 시간 api
-        self.api_call_count = 0
+        self.api_call_count = 1
 
-
+        self.canApiCall = 1
         self.today = datetime.today().strftime("%Y%m%d")
-        self.nowTime = time.strftime(time.strftime('%H%M%S'))
+        self.setTime = int(time.strftime(time.strftime('%H%M%S')))  #몇초간격임을 알기 위한 것임
 
-        print(self.nowTime)
-        print(self.today)
+    def push(self, prior, name, code):
+        self.job_qp.put([prior, name, code])
 
-    def push(self, prior, code):
-        self.job_qp.put([prior, code])
+    def get_now_time(self):
+        return int(time.strftime(time.strftime('%H%M%S')))  # 몇초간격임을 알기 위한 것임
+
+    def set_now_time(self):
+        self.setTime = int(time.strftime(time.strftime('%H%M%S')))  #몇초간격임을 알기 위한 것임
 
     #모든 실행은 여기서 관리함
     def excute(self):
-
         if self.job_qp.empty() == False:
-            first_ex = self.job_qp.get()  # 우선순위 제일 높은거 가져옴
-            print(first_ex)
+            if self.api_call_count % 5 != 0 and self.canApiCall == 1:
+                node = self.job_qp.get()  # 우선순위 제일 높은거
 
-            if first_ex[0] == 3:  # 차트 갱신
-                print("실행")
-                self.callApi._set_opt10081(stock_code=first_ex[1], date=self.today, prevNext=self.callApi.nextValueHave)
-                print(self.callApi.ohlc)
+                if node[1] == "chart":  # 차트 갱신
+                    self.callApi._set_opt10081(stock_code=node[2], date=self.today, prevNext=0)
+                    self.callApi.stockName = self.callApi.codeToName[node[2]]
+
+                elif node[1] == "hoga":     ##:
+                    self.controlApi._set__opt10004(node[2])
+                elif node[1] == "jango":
+                    self.controlApi._set_opw00018(node[2], 2)
+
+                self.set_now_time()
+                self.api_call_count += 1
+
+                return node[1]
+            else:
+                self.canApiCall = 0
+
+                if self.get_now_time() - self.setTime >= 1:
+                    self.api_call_count = 1
+                    self.canApiCall = 1
+        else:
+            if self.get_now_time() - self.setTime >= 1:
+                self.api_call_count = 1
+
+        return "none"
+
+    def run(self):
+        pass
+
 
 
 if __name__ == "__main__":
