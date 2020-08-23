@@ -6,10 +6,6 @@ from UIControl import MyWindow
 import requests
 from bs4 import BeautifulSoup
 
-# 해야할 일 타이머에 맞춰서 차트 가지고 오기 #
-# 실시간으로 그리기                         #
-# 계좌연동                                  #
-#UI에서 그리기 뛰우기
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

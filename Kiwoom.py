@@ -12,7 +12,9 @@ class KiwoomS(QAxWidget):
         self.set_signol_slot()
 
         self.nextValueHave = 0      #다음 값이 있는지 체크해줌
+        self.nameToCode = {}
         self.codeToName = {}
+        self.stockName = ""
 
         #로그인
         self._login()
@@ -40,7 +42,8 @@ class KiwoomS(QAxWidget):
             code_list.append(i)
 
         for i in code_list:
-            self.codeToName[self.get_master_code_name(i)] = i
+            self.nameToCode[self.get_master_code_name(i)] = i
+            self.codeToName[i] = self.get_master_code_name(i)
 
     # Event CallBack
     def set_signol_slot(self):
@@ -64,6 +67,12 @@ class KiwoomS(QAxWidget):
         self.dynamicCall("CommRqData(QString, QString, int, QString)", rq_name, tr_name, prevNext, "0101")
         self.onEvent = QEventLoop()
         self.onEvent.exec()
+
+    def _CommRqData_displayNUm(self, rq_name, tr_name, prevNext, displayNum):
+        self.dynamicCall("CommRqData(QString, QString, int, QString)", rq_name, tr_name, prevNext, displayNum)
+        self.onEvent = QEventLoop()
+        self.onEvent.exec()
+
 
     def _OnReceiveChejanData(self, gubun, iten_cnt, fid_list):
         print(gubun)
@@ -103,7 +112,32 @@ class KiwoomS(QAxWidget):
         self.dynamicCall("SetInputValue(QString, QString)", id, code)
 
 
-                                                                               #사용안함
+    def _set_opw00018(self, account, Lookup_div):
+        self.accInfo = { "name" : [], "stockNum" : [], "winPirce": [], "profit_rate": [], "hold_ratio": [], "buy_price":[]}
+
+        self._SetInputValue("계좌번호", account)
+        self._SetInputValue("비밀번호", "")
+        self._SetInputValue("비밀번호입력매체구분 ", "00")
+        self._SetInputValue("조회구분", Lookup_div)
+
+        self._CommRqData_displayNUm("opw00018_req", "opw00018", 0, "2000")
+
+    def _get_opw00018(self, tr_name, recode_name, prevNext):
+        n = self.dynamicCall("GetRepeatCnt(QString, QString)", tr_name, recode_name)
+
+        for idx in range(n):
+            self.accInfo['name'].append(self._GetCommData(tr_name, recode_name, idx, "종목명"))
+            self.accInfo['stockNum'].append(self.string_to_num(self._GetCommData(tr_name, recode_name, idx, "보유수량")))
+            self.accInfo['winPirce'].append(self.string_to_num(self._GetCommData(tr_name, recode_name, idx, "평가손익")))
+            self.accInfo['profit_rate'].append(self.string_to_num(self._GetCommData(tr_name, recode_name, idx, "수익률(%)")))
+            self.accInfo['hold_ratio'].append(self.string_to_num(self._GetCommData(tr_name, recode_name, idx, "보유비중(%)")))
+            self.accInfo['buy_price'].append(self.string_to_num(self._GetCommData(tr_name, recode_name, idx, "매입가")))
+
+        self.accInfo = DataFrame(self.accInfo)
+
+        print(self.accInfo)
+
+
     def _OnReceiveTrData(self, scrNo, rq_name, tr_name, recode_name, prevNext,  dl, err_code, msg, msg1):
         self.nextValueHave = prevNext
 
@@ -126,6 +160,8 @@ class KiwoomS(QAxWidget):
             self._get_opt10082(tr_name, recode_name, prevNext)
         elif rq_name == "opt10004_req":
             self._get_opt10004(tr_name, recode_name, prevNext)
+        elif rq_name == "opw00018_req":
+            self._get_opw00018(tr_name, recode_name, prevNext)
 
         self.onEvent.exit()
 
@@ -334,7 +370,7 @@ class KiwoomS(QAxWidget):
             self.ohlc['close'].insert(0, self.erase_strip(close))
             self.ohlc['high'].insert(0, self.erase_strip(high))
             self.ohlc['low'].insert(0, self.erase_strip(low))
-            self.ohlc['date'].insert(0, self.erase_strip(date))
+            self.ohlc['date'].insert(0, str(self.erase_strip(date)))
             self.ohlc['volume'].insert(0, self.erase_strip(volume))
 
 
@@ -390,7 +426,14 @@ class KiwoomS(QAxWidget):
     def erase_strip(self, target):
         return int(target.strip())
 
+    def string_to_num(self, target):
+        for i in range(len(target)):
+            if target[i] == ".":
+                print(float(target))
+                return float(target)
 
+        print(int(target))
+        return int(target)
 
 
 

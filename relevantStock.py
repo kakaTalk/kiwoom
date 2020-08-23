@@ -7,8 +7,8 @@ class pasingNaver:
         self.name_change_upjong = {} #종목 이름 -> 종목 업종
         self.name_change_thema = {} #종목 이름 -> 종목 테마
 
-        self.upjong_change_name = {}  # 종목 테마 -> 종목 이름
-        self.thema_change_name = {}  # 종목 이름 -> 종목 테마
+        self.upjong_change_name = {}  # 종목 업종 -> 종목 이름들
+        self.thema_change_name = {}  # 종목 테마 -> 종목 이름들
 
         self.get_theme_list()
         self.get_upjong_list()
@@ -43,6 +43,8 @@ class pasingNaver:
                     else:
                         self.name_change_upjong[name] = cand[start:end] + "\n"
 
+
+    #업종 6페이지까지 다 못 읽음
     def get_theme_list(self):
         url = "https://finance.naver.com/sise/theme.nhn"
         res = requests.get(url)
