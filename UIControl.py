@@ -121,14 +121,14 @@ class MyWindow(QMainWindow, form_class):
             self.jobStandby.excute()
             self.drawGraph.orgData = self.controlApi.ohlc
             self.drawGraph.cov = -1
+            print("체크", self.helpChartUnd.auto_coffcient(self.drawGraph.orgData['close'], 5))
 
             if name in self.find_relevant_stock.name_change_upjong.keys():
                 upjong = self.find_relevant_stock.name_change_upjong[name]
-                upjongName = upjong.split()
+                upjongName = upjong.split("\n")[:-1]
 
                 for i in upjongName:
                     nameList = self.find_relevant_stock.upjong_change_name[i]
-                    print(nameList)
 
                     for get_names in nameList:
                         if get_names in self.controlApi.nameToCode.keys():
@@ -136,6 +136,17 @@ class MyWindow(QMainWindow, form_class):
 
             if name in self.find_relevant_stock.name_change_thema.keys():
                 thema = self.find_relevant_stock.name_change_thema[name]
+                print(thema)
+                themaName = thema.split("\n")[:-1]
+
+                print(themaName)
+
+                for i in themaName:
+                    nameList = self.find_relevant_stock.thema_change_name[i]
+
+                    for get_names in nameList:
+                        if get_names in self.controlApi.nameToCode.keys():
+                            self.draw_chart(self.controlApi.nameToCode[get_names])
 
             self.textEdit.setText(upjong + thema)
             self.lineEdit_2.setText(self.code)
